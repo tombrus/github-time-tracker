@@ -6,7 +6,9 @@ import {loggedin} from '@/code/state';
 import {ref} from 'vue';
 import IssueIncludeDialog from '@/IssueIncludeDialog.vue';
 import {ratelimitCritical, ratelimitMap} from '@/code/ratelimit';
+import pkg from '../package.json';
 
+const version     = ref(pkg.version);
 const showAdd     = ref<boolean>(false);
 const showOverlay = ref<boolean>(false);
 
@@ -25,7 +27,7 @@ function closeOverlay() {
         <div class="fixed top-0 left-0 right-0 bg-green-200 h-[80px] z-10">
             <div class="flex flex-col justify-center items-center w-full h-full">
                 <div class="text-center text-4xl font-extrabold">
-                    GitHub Time Tracker
+                    GitHub Time Tracker [{{ version }}]
                 </div>
                 <UserPane/>
             </div>
