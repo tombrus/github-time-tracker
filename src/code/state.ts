@@ -45,7 +45,7 @@ const ghttState: Ref<GhttState>  = ref<GhttState>(EMPTY_STATE);
 
 (async function () {
     ghttState.value = await readStateFromCookie();
-})()
+})();
 
 //==================================================================================================
 export function getToken(): string {
@@ -111,15 +111,15 @@ export async function startTimer(at: Date, issue: GithubIssue) {
 export async function stopTimer(end: Date) {
     const start = ghttState.value.gist.start;
     if (start) {
-        const begin: Date        = start.at;
-        const issue: GithubIssue = start.issue;
-
-        await githubAddIssueEntry(issue, makeTimerInfoString(begin, end));
-
-        activeIssueId.value        = -1;
         ghttState.value.gist.start = undefined;
-        await writeTheGist();
+        activeIssueId.value        = -1;
+        await addEntry(start.issue, start.at, end);
     }
+}
+
+export async function addEntry(issue: GithubIssue, begin: Date, end: Date) {
+    await githubAddIssueEntry(issue, makeTimerInfoString(begin, end));
+    await writeTheGist();
 }
 
 //==================================================================================================
@@ -195,7 +195,7 @@ async function writeTheCookie() {
 }
 
 async function writeCookie(cookie: string) {
-    trace('WRITE TOKEN TO COOKIE =>', cookie);
+    trace('WRITE token TO COOKIE =>', cookie);
     localStorage.setItem(COOKIE_NAME, await encrypt(cookie));
 }
 
@@ -204,7 +204,7 @@ async function readCookie(): Promise<string> {
         const crypted = localStorage.getItem(COOKIE_NAME);
         if (crypted) {
             const token = await decrypt(crypted);
-            trace('READ TOKEN FROM COOKIE =>', token);
+            trace('READ token FROM COOKIE =>', token);
             return token;
         }
     } catch (error) {

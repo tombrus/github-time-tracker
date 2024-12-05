@@ -1,6 +1,6 @@
 {
-  "name": "try-tt",
-  "version": "0.0.0",
+  "name": "github-time-tracker",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
