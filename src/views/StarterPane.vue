@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {defineProps, ref} from 'vue';
 import type {GithubIssue} from '@/code/github';
-import {IssueTimerState, startTimer, stopTimer} from '@/code/state';
+import {addEntry, IssueTimerState, startTimer, stopTimer} from '@/code/state';
 import Datepicker from '@vuepic/vue-datepicker';
 import {type DPTime, formatDPTime, humanDate, makeDPTime, yesterday} from '@/code/utils';
 
@@ -27,8 +27,12 @@ async function startStopAt() {
     await startStop(d);
 }
 
-async function addEntry() {
-
+async function addEntryAt() {
+    const start = new Date(selectedDate.value);
+    const end   = new Date(selectedDate.value);
+    start.setHours(fromTime.value.hours, fromTime.value.minutes, 0, 0);
+    start.setHours(toTime.value.hours, toTime.value.minutes, 0, 0);
+    await addEntry(props.issue, start, end);
 }
 
 async function startStop(d: Date) {
@@ -85,7 +89,7 @@ function dynClass(): string {
 
         <div class="">
             <div class="flex flex-row mybutton w-80 h-8"
-                 @click="addEntry()">
+                 @click="addEntryAt()">
                 <div class="flex-1">Add&nbsp;Entry&nbsp;</div>
 
                 <Datepicker v-model="selectedDate"
@@ -114,7 +118,7 @@ function dynClass(): string {
                 >
                     <template #trigger>
                         <div class="hover:bg-black px-1 w-[50px]">
-                        {{ formatDPTime(fromTime) }}
+                            {{ formatDPTime(fromTime) }}
                         </div>
                     </template>
                 </Datepicker>
@@ -130,7 +134,7 @@ function dynClass(): string {
                 >
                     <template #trigger>
                         <div class="hover:bg-black px-1 w-[50px]">
-                        {{ formatDPTime(toTime) }}
+                            {{ formatDPTime(toTime) }}
                         </div>
                     </template>
                 </Datepicker>
