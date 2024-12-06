@@ -28,3 +28,8 @@ npm run dev
 ```shell
 npm run build
 ```
+
+# deployment on GitHub pages
+
+This repo is deployed for you on [github pages](https://tombrus.github.io/github-time-tracker/).
+
