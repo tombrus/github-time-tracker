@@ -1,34 +1,22 @@
 <script setup lang="ts">
+import {ref} from 'vue';
 import UserPane from '@/views/UserPane.vue';
 import Login from '@/views/Login.vue';
 import IssueList from '@/views/IssueList.vue';
-import {isLoginInProgress, loggedin} from '@/code/state';
-import {ref} from 'vue';
 import IssueIncludeDialog from '@/IssueIncludeDialog.vue';
-import pkg from '../package.json';
 import GitHubCorner from '@/views/GitHubCorner.vue';
 import RateLimits from '@/RateLimits.vue';
+import VersionString from '@/VersionString.vue';
+import {isLoginInProgress, loggedin} from '@/code/state';
 
-const version    = ref(pkg.version);
 const showDialog = ref<boolean>(false);
 
-function startIncludingIssues() {
-    showDialog.value = true;
-}
-
-function closeOverlay() {
-    showDialog.value = false;
-}
 </script>
 
 <template>
     <GitHubCorner/>
     <RateLimits/>
-    <a href="https://github.com/tombrus/github-time-tracker"
-       class="absolute top-[60px] right-[40px] z-50 text-xs font-bold">
-        v{{ version }}
-    </a>
-
+    <VersionString/>
 
     <div class="flex h-screen overflow-hidden">
 
@@ -42,7 +30,7 @@ function closeOverlay() {
 
         <div class="flex flex-1 mt-[80px]">
             <div class="fixed left-0 top-[80px] bottom-0 w-[180px] bg-green-200 flex flex-col justify-between px-2">
-                <div v-if="loggedin()" @click="startIncludingIssues" class="mybutton">
+                <div v-if="loggedin()" @click="showDialog = true" class="mybutton">
                     Include Issues
                 </div>
                 <UserPane/>
@@ -59,7 +47,7 @@ function closeOverlay() {
         </div>
 
         <IssueIncludeDialog
-            v-on:closed="closeOverlay"
+            v-on:closed="showDialog = false"
             :visible="showDialog"/>
     </div>
 </template>
