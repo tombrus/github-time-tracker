@@ -42,12 +42,19 @@ const EMPTY_STATE: GhttState = {
 //==================================================================================================
 const activeIssueId: Ref<number> = ref<number>(-1);
 const ghttState: Ref<GhttState>  = ref<GhttState>(EMPTY_STATE);
+const loginInProgress            = ref<boolean>(false);
 
 (async function () {
-    ghttState.value = await readStateFromCookie();
+    loginInProgress.value = true;
+    ghttState.value       = await readStateFromCookie();
+    loginInProgress.value = false;
 })();
 
 //==================================================================================================
+export function isLoginInProgress() {
+    return loginInProgress.value;
+}
+
 export function getToken(): string {
     return ghttState.value.token;
 }
@@ -88,9 +95,11 @@ export function loggedin(): boolean {
 }
 
 export async function login(token: string) {
+    loginInProgress.value = true;
     const value = await readState(token);
     trace('LOGIN', value);
     ghttState.value = value;
+    loginInProgress.value = false;
 }
 
 export function logout() {

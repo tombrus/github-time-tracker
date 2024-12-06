@@ -28,13 +28,11 @@ async function startStopAt() {
 }
 
 async function addEntryAt() {
-    console.log("addEntryAt called");
-    const start = new Date(selectedDate.value);
+    const begin = new Date(selectedDate.value);
     const end   = new Date(selectedDate.value);
-    start.setHours(fromTime.value.hours, fromTime.value.minutes, 0, 0);
-    start.setHours(toTime.value.hours, toTime.value.minutes, 0, 0);
-    console.log("addEntryAt called", props.issue, start, end);
-    await addEntry(props.issue, start, end);
+    begin.setHours(fromTime.value.hours, fromTime.value.minutes, 0, 0);
+    end.setHours(toTime.value.hours, toTime.value.minutes, 0, 0);
+    await addEntry(props.issue, begin, end);
 }
 
 async function startStop(d: Date) {

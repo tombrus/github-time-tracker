@@ -2,64 +2,64 @@
 import UserPane from '@/views/UserPane.vue';
 import Login from '@/views/Login.vue';
 import IssueList from '@/views/IssueList.vue';
-import {loggedin} from '@/code/state';
+import {isLoginInProgress, loggedin} from '@/code/state';
 import {ref} from 'vue';
 import IssueIncludeDialog from '@/IssueIncludeDialog.vue';
-import {ratelimitCritical, ratelimitMap} from '@/code/ratelimit';
 import pkg from '../package.json';
+import GitHubCorner from '@/views/GitHubCorner.vue';
+import RateLimits from '@/RateLimits.vue';
 
-const version     = ref(pkg.version);
-const showAdd     = ref<boolean>(false);
-const showOverlay = ref<boolean>(false);
+const version    = ref(pkg.version);
+const showDialog = ref<boolean>(false);
 
-function startAddIssue() {
-    showOverlay.value = true;
+function startIncludingIssues() {
+    showDialog.value = true;
 }
 
 function closeOverlay() {
-    showOverlay.value = false;
+    showDialog.value = false;
 }
 </script>
 
 <template>
+    <GitHubCorner/>
+    <RateLimits/>
+    <a href="https://github.com/tombrus/github-time-tracker"
+       class="absolute top-[60px] right-[40px] z-50 text-xs font-bold">
+        v{{ version }}
+    </a>
+
+
     <div class="flex h-screen overflow-hidden">
 
         <div class="fixed top-0 left-0 right-0 bg-green-200 h-[80px] z-10">
             <div class="flex flex-col justify-center items-center w-full h-full">
                 <div class="text-center text-4xl font-extrabold">
-                    GitHub Time Tracker [{{ version }}]
+                    GitHub Time Tracker
                 </div>
-                <UserPane/>
             </div>
         </div>
 
-        <div class="flex flex-1 overflow-y-auto mt-[80px]">
-            <div class="w-[200px] bg-green-200">
-                <div v-if="loggedin() && !showAdd" @click="startAddIssue" class="mybutton mx-4">
+        <div class="flex flex-1 mt-[80px]">
+            <div class="fixed left-0 top-[80px] bottom-0 w-[180px] bg-green-200 flex flex-col justify-between px-2">
+                <div v-if="loggedin()" @click="startIncludingIssues" class="mybutton">
                     Include Issues
                 </div>
-
-                <div v-if="ratelimitCritical"
-                     class="flex flex-col  bg-orange-600 text-white border-white shadow-lg shadow-black m-3 p-2 text-xs">
-                    <div class="grid grid-cols-3 gap-1 ">
-                        <template v-for="rl in ratelimitMap.keys()" :key="rl">
-                            <div>{{ rl }}</div>
-                            <div class="text-right ">{{ ratelimitMap.get(rl)!.remaining }}</div>
-                            <div class="text-right ">{{ ratelimitMap.get(rl)!.limit }}</div>
-                        </template>
-                    </div>
-                </div>
-
+                <UserPane/>
             </div>
-
-            <div class="flex-1 p-5 bg-green-100">
-                <Login v-if="!loggedin()"/>
-                <IssueList v-if="loggedin()"/>
+            <div class="flex-1 ml-[180px] overflow-y-auto p-5 bg-green-100">
+                <div v-if="isLoginInProgress()" class="w-full text-center my-10 font-italic">
+                    updating...
+                </div>
+                <template v-else>
+                    <IssueList v-if="loggedin()"/>
+                    <Login v-else/>
+                </template>
             </div>
         </div>
 
         <IssueIncludeDialog
             v-on:closed="closeOverlay"
-            :visible="showOverlay"/>
+            :visible="showDialog"/>
     </div>
 </template>

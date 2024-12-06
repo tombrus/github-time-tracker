@@ -1,4 +1,4 @@
-export const TRACE: boolean = true;
+export const TRACE: boolean = false;
 
 export function trace(...args: any[]) {
     if (TRACE) {
