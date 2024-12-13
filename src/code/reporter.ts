@@ -64,7 +64,7 @@ async function getEntryList(progress: Progress): Promise<ReportEntry[]> {
     return entryList;
 }
 
-function consolidate(entryList: ReportEntry[], progress: Progress):Map<GithubRepo,ReportEntry[]> {
+function consolidate(entryList: ReportEntry[], progress: Progress): ReportEntry[] {
     return entryList;
 }
 
