@@ -26,8 +26,10 @@ export enum IssueTimerState {
 }
 
 //==================================================================================================
-const COOKIE_NAME: string = 'GHTT-state';
-const GIST_NAME: string   = 'GHTT-state';
+const DEV_POST: string      = import.meta.env.VITE_ENV === 'development' ? '-dev' : '';
+const COOKIE_NAME: string   = `GHTT-state${DEV_POST}`;
+const GIST_NAME: string     = `GHTT-state${DEV_POST}`;
+const GIST_FILENAME: string = `${GIST_NAME}.json`;
 
 const EMPTY_TOKEN: string    = '';
 const EMPTY_GIST: GhttGist   = {
@@ -96,14 +98,23 @@ export function loggedin(): boolean {
 
 export async function login(token: string) {
     loginInProgress.value = true;
-    const value = await readState(token);
+    const value           = await readState(token);
     trace('LOGIN', value);
-    ghttState.value = value;
+    ghttState.value       = value;
     loginInProgress.value = false;
 }
 
 export function logout() {
     ghttState.value = EMPTY_STATE;
+    deleteAllCookies();
+}
+
+function deleteAllCookies() {
+    document.cookie.split(';').forEach(c => {
+        const eqPos     = c.indexOf('=');
+        const name      = eqPos > -1 ? c.slice(0, eqPos) : c;
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    });
 }
 
 export async function startTimer(at: Date, issue: GithubIssue) {
@@ -162,20 +173,25 @@ async function readState(token: string): Promise<GhttState> {
 }
 
 async function writeTheGist() {
-    await writeGist(ghttState.value.token, ghttState.value.gist);
+    const token = ghttState.value.token;
+    const theGist = ghttState.value.gist;
+    const nowGist = await readGist(token)
+    if (nowGist!==theGist) {
+        await writeGist(token, theGist);
+    }
 }
 
 async function writeGist(token: string, gist: GhttGist) {
     const newGist: RequestGist = {
         description: GIST_NAME,
         public     : false,
-        files      : {[GIST_NAME]: {content: JSON.stringify(gist, null, 2)}},
+        files      : {[GIST_FILENAME]: {content: JSON.stringify(gist, null, 2)}},
     };
 
     if (!gist.id) {
         trace('CREATE GIST...', token, newGist);
-        gist.id                          = await githubCreateGist(newGist, token) ?? '';
-        newGist.files[GIST_NAME].content = JSON.stringify(gist, null, 2);
+        gist.id                              = await githubCreateGist(newGist, token) ?? '';
+        newGist.files[GIST_FILENAME].content = JSON.stringify(gist, null, 2);
     }
 
     trace(`WRITE GIST... ${gist.id} => `, token, newGist);
@@ -183,19 +199,27 @@ async function writeGist(token: string, gist: GhttGist) {
 }
 
 async function readGist(token: string): Promise<GhttGist> {
-    if (token) {
-        const allGists: GithubGist[]      = await githubGetAllGists(token);
-        const gistUrl: string | undefined = allGists.filter(gist => gist.description === GIST_NAME).flatMap(g => Object.values(g.files).map(file => file.raw_url))?.[0];
-        if (gistUrl) {
-            const ghttGist = await getGistFileContents(gistUrl);
-            if (ghttGist) {
-                trace(`READ GIST '${token}' =>`, ghttGist);
-                return ghttGist;
-            }
-        }
-        await writeGist(token, EMPTY_GIST);
+    if (!token) {
+        return EMPTY_GIST;
     }
-    return EMPTY_GIST;
+    const allGists: GithubGist[]         = await githubGetAllGists(token);
+    const myGist: GithubGist | undefined = allGists.find(g => g.description === GIST_NAME);
+    const myFileUrl: string | undefined  = myGist?.files?.[GIST_FILENAME]?.raw_url;
+    if (!myFileUrl) {
+        await writeGist(token, EMPTY_GIST);
+        return EMPTY_GIST;
+    }
+    const ghttGist = await getGistFileContents(myFileUrl);
+    if (!ghttGist) {
+        await writeGist(token, EMPTY_GIST);
+        return EMPTY_GIST;
+    }
+    trace(`READ GIST '${token}' =>`, ghttGist);
+    if (ghttGist.id !== myGist!.id) {
+        ghttGist.id = myGist!.id;
+        await writeGist(token, ghttGist);
+    }
+    return ghttGist;
 }
 
 

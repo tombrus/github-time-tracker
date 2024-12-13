@@ -3,7 +3,6 @@ import type {GithubIssue} from '@/code/github';
 import {computed, type PropType, ref} from 'vue';
 import {dropIssue, getIssueState, IssueTimerState} from '@/code/state';
 import CloseBox from '@/views/CloseBox.vue';
-import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import StarterPane from '@/views/StarterPane.vue';
 
@@ -34,12 +33,17 @@ function dynClassMain() {
         return 'bg-gray-300';
     }
 }
+
 function dynClassSub() {
     if (issueTimerState.value === IssueTimerState.ME) {
         return 'bg-green-200';
     } else {
         return 'bg-gray-200';
     }
+}
+
+function dynTextColor() {
+    return props.issue.state=='closed'?'text-gray-400':''
 }
 
 </script>
@@ -59,12 +63,30 @@ function dynClassSub() {
 
         <div class="flex flex-row w-full">
 
-            <div class="flex flex-col text-left px-2 flex-1">
-                <div class="font-bold">
-                    # {{ issue.number }} – {{ issue.title }}
+            <div class="flex flex-col text-left px-2 flex-1"
+                 :class="dynTextColor()">
+
+                <div class="flex flex-row">
+                    <a class="font-bold hover:text-blue-600 hover:underline"
+                       :href="issue.html_url" target="_blank" rel="noopener noreferrer" @click.stop>
+                        {{ issue.title }}
+                    </a>
                 </div>
-                <div class="text-sm pl-6">
-                    {{ issue.repository?.owner.login }} – {{ issue.repository?.name }}
+                <div class="flex flex-row items-center text-sm pl-6">
+                    <a class="hover:text-blue-600 hover:underline"
+                       :href="issue.html_url" target="_blank" rel="noopener noreferrer @click.stop">
+                        #{{ issue.number }}
+                    </a>
+                    <div class="p-1">–</div>
+                    <a class="hover:text-blue-600 hover:underline"
+                       :href="issue.repository?.html_url" target="_blank" rel="noopener noreferrer @click.stop">
+                        {{ issue.repository?.name }}
+                    </a>
+                    <div class="p-1">–</div>
+                    <a class="hover:text-blue-600 hover:underline"
+                       :href="issue.repository?.owner.html_url" target="_blank" rel="noopener noreferrer @click.stop">
+                        {{ issue.repository?.owner.login }}
+                    </a>
                 </div>
             </div>
 

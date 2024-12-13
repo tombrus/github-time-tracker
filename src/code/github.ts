@@ -5,15 +5,21 @@ import type {Endpoints} from '@octokit/types';
 import {monitorRatelimit} from '@/code/ratelimit';
 import {trace} from '@/code/trace';
 
-export type GetGistsResponse = Endpoints['GET /gists']['response'];
-export type GetIssueResponse = Endpoints['GET /user/issues']['response'];
+const NUMBER_PER_PAGE = 30;
+
 export type GetUserResponse = Endpoints['GET /user']['response'];
+export type GetGistsResponse = Endpoints['GET /gists']['response'];
+export type GetUserIssueResponse = Endpoints['GET /user/issues']['response'];
+export type GetRepoIssueCommentsResponse = Endpoints['GET /repos/{owner}/{repo}/issues/{issue_number}/comments']['response'];
 export type PostGistRequest = Endpoints['POST /gists']['request'];
 export type PostGistsResponse = Endpoints['POST /gists']['response'];
+export type PostRepoIssueCommentResponse = Endpoints['POST /repos/{owner}/{repo}/issues/{issue_number}/comments']['response'];
 
-export type GithubIssue = GetIssueResponse['data'][0];
+export type GithubIssue = GetUserIssueResponse['data'][0];
+export type GithubRepo = GithubIssue['repository'];
 export type GithubGist = GetGistsResponse['data'][0];
 export type GithubUser = GetUserResponse['data'];
+export type GithubComment = GetRepoIssueCommentsResponse['data'][0];
 export type RequestGist = PostGistRequest['data'];
 
 export async function githubGetUser(token: string): Promise<GithubUser> {
@@ -47,21 +53,26 @@ export async function getGistFileContents(gistUrl: string) {
     return response ? response.data : undefined;
 }
 
-export async function githubGetAllIssues(progress: Ref<number>): Promise<GithubIssue[]> {
+export async function githubGetAllIssues(progress?: Ref<number>): Promise<GithubIssue[]> {
     try {
         let allIssues: GithubIssue[] = [];
-        const perPage: number        = 30;
+        const perPage: number        = NUMBER_PER_PAGE;
         for (let page: number = 1; true; page++) {
-            const response: GetIssueResponse = await axios.get('https://api.github.com/user/issues', {
+
+            const response: GetUserIssueResponse = await axios.get('https://api.github.com/user/issues', {
                 headers: getAuthorizationHeader(),
                 params : {
+                    filter  : 'assigned',
+                    state   : 'all',
                     page,
                     per_page: perPage,
                 },
             });
             monitorRatelimit(response);
             allIssues = allIssues.concat(response.data);
-            progress.value += response.data.length;
+            if (progress) {
+                progress.value += response.data.length;
+            }
             if (response.data.length < perPage) {
                 break;
             }
@@ -77,12 +88,11 @@ export async function githubGetAllIssues(progress: Ref<number>): Promise<GithubI
 export async function githubGetAllGists(token: string): Promise<GithubGist[]> {
     const allGists: GithubGist[] = [];
     for (let page: number = 1; true; page++) {
-
         const response: GetGistsResponse = await axios.get('https://api.github.com/gists', {
             headers: getAuthorizationHeader(token),
             params : {
                 page    : page,
-                per_page: 30,
+                per_page: NUMBER_PER_PAGE,
                 t       : Date.now(),
             },
         });
@@ -97,13 +107,41 @@ export async function githubGetAllGists(token: string): Promise<GithubGist[]> {
     return allGists;
 }
 
+export async function githubGetIssueComments(issue: GithubIssue): Promise<GithubComment[]> {
+    const repo                         = issue.repository!.name!;
+    const owner                        = issue.repository!.owner!.login!;
+    const issueNum                     = issue.number;
+    const allComments: GithubComment[] = [];
+    try {
+        for (let page = 1; true; page++) {
+            const url: string                            = `https://api.github.com/repos/${owner}/${repo}/issues/${issueNum}/comments`;
+            const response: GetRepoIssueCommentsResponse = await axios.get(url, {
+                headers: getAuthorizationHeader(),
+                params : {
+                    page,
+                    per_page: NUMBER_PER_PAGE,
+                },
+            });
+            monitorRatelimit(response);
+            const comments: GithubComment[] = response.data;
+            allComments.push(...comments);
+            if (comments.length < NUMBER_PER_PAGE) {
+                break;
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching comments:', error);
+    }
+    return allComments;
+}
+
 export async function githubAddIssueEntry(issue: GithubIssue, text: string) {
     const repo: string     = issue.repository!.name!;
     const owner: string    = issue.repository!.owner!.login!;
     const issueNum: number = issue.number;
     try {
-        const url        = `https://api.github.com/repos/${owner}/${repo}/issues/${issueNum}/comments`;
-        const response = await axios.post(url, {body: text}, getAuthorizationConfig());
+        const url: string                            = `https://api.github.com/repos/${owner}/${repo}/issues/${issueNum}/comments`;
+        const response: PostRepoIssueCommentResponse = await axios.post(url, {body: text}, getAuthorizationConfig());
 
         monitorRatelimit(response);
         trace(`Issue ${owner}/${repo}/${issueNum} updated with comment:`, response.data);

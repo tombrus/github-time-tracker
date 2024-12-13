@@ -8,9 +8,15 @@ import GitHubCorner from '@/views/GitHubCorner.vue';
 import RateLimits from '@/RateLimits.vue';
 import VersionString from '@/VersionString.vue';
 import {isLoginInProgress, loggedin} from '@/code/state';
+import {makeReport} from '@/code/reporter';
+import {Progress} from '@/code/progress';
 
 const showDialog = ref<boolean>(false);
 
+async function reportClicked() {
+    const progress = new Progress();
+    await makeReport(progress);
+}
 </script>
 
 <template>
@@ -30,8 +36,15 @@ const showDialog = ref<boolean>(false);
 
         <div class="flex flex-1 mt-[80px]">
             <div class="fixed left-0 top-[80px] bottom-0 w-[180px] bg-green-200 flex flex-col justify-between px-2">
-                <div v-if="loggedin()" @click="showDialog = true" class="mybutton">
-                    Include Issues
+
+                <div v-if="loggedin()"
+                     class="flex flex-col space-y-2">
+                    <div @click="showDialog = true" class="mybutton">
+                        Include Issues
+                    </div>
+                    <div @click="reportClicked()" class="mybutton">
+                        Report
+                    </div>
                 </div>
                 <UserPane/>
             </div>

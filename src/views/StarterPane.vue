@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {defineProps, ref} from 'vue';
+import {ref} from 'vue';
 import type {GithubIssue} from '@/code/github';
 import {addEntry, IssueTimerState, startTimer, stopTimer} from '@/code/state';
 import Datepicker from '@vuepic/vue-datepicker';
@@ -10,7 +10,7 @@ const props = defineProps<{
     issueTimerState: IssueTimerState;
 }>();
 
-const atTime       = ref<DPTime>(makeDPTime(new Date().getHours(), 0));
+const atTime       = ref<DPTime>(makeDPTime(9, 0));
 const selectedDate = ref<Date>(yesterday());
 const fromTime     = ref<DPTime>(makeDPTime(9, 0));
 const toTime       = ref<DPTime>(makeDPTime(17, 0));
