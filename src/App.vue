@@ -26,7 +26,7 @@ async function reportClicked() {
 
     <div class="flex h-screen overflow-hidden">
 
-        <div class="fixed top-0 left-0 right-0 bg-green-200 h-[80px] z-10">
+        <div class="fixed top-0 left-0 right-0 h-[80px] z-10">
             <div class="flex flex-col justify-center items-center w-full h-full">
                 <div class="text-center text-4xl font-extrabold">
                     GitHub Time Tracker
@@ -35,7 +35,7 @@ async function reportClicked() {
         </div>
 
         <div class="flex flex-1 mt-[80px]">
-            <div class="fixed left-0 top-[80px] bottom-0 w-[180px] bg-green-200 flex flex-col justify-between px-2">
+            <div class="fixed left-0 top-[80px] bottom-0 w-[180px] flex flex-col justify-between px-2">
 
                 <div v-if="loggedin()"
                      class="flex flex-col space-y-2">

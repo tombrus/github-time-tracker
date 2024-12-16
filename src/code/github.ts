@@ -10,6 +10,7 @@ const NUMBER_PER_PAGE = 30;
 export type GetUserResponse = Endpoints['GET /user']['response'];
 export type GetGistsResponse = Endpoints['GET /gists']['response'];
 export type GetUserIssueResponse = Endpoints['GET /user/issues']['response'];
+export type GetIssueResponse = Endpoints['GET /repos/{owner}/{repo}/issues/{issue_number}']['response'];
 export type GetRepoIssueCommentsResponse = Endpoints['GET /repos/{owner}/{repo}/issues/{issue_number}/comments']['response'];
 export type PostGistRequest = Endpoints['POST /gists']['request'];
 export type PostGistsResponse = Endpoints['POST /gists']['response'];

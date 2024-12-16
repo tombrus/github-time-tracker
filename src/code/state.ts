@@ -42,9 +42,9 @@ const EMPTY_STATE: GhttState = {
 };
 
 //==================================================================================================
-const activeIssueId: Ref<number> = ref<number>(-1);
-const ghttState: Ref<GhttState>  = ref<GhttState>(EMPTY_STATE);
-const loginInProgress            = ref<boolean>(false);
+const activeIssueId: Ref<number>    = ref<number>(-1);
+const ghttState: Ref<GhttState>     = ref<GhttState>(EMPTY_STATE);
+const loginInProgress: Ref<boolean> = ref<boolean>(false);
 
 (async function () {
     loginInProgress.value = true;
@@ -75,7 +75,11 @@ export function getIssues(): GithubIssue[] {
 
 export async function addIssue(issue: GithubIssue) {
     ghttState.value.gist.issues.push(issue);
-    ghttState.value.gist.issues.sort((a, b) => a.title.localeCompare(b.title));
+    ghttState.value.gist.issues.sort((a, b) => {
+        // if (a.id==activeIssueId.value) return +1;
+        // if (b.id==activeIssueId.value) return -1;
+        return a.title.localeCompare(b.title);
+    });
     await writeTheGist();
 }
 
@@ -173,10 +177,10 @@ async function readState(token: string): Promise<GhttState> {
 }
 
 async function writeTheGist() {
-    const token = ghttState.value.token;
+    const token   = ghttState.value.token;
     const theGist = ghttState.value.gist;
-    const nowGist = await readGist(token)
-    if (nowGist!==theGist) {
+    const nowGist = await readGist(token);
+    if (nowGist !== theGist) {
         await writeGist(token, theGist);
     }
 }
